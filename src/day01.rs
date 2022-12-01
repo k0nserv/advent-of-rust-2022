@@ -5,9 +5,9 @@ pub fn star_one(input: &str) -> u64 {
 pub fn star_two(input: &str) -> u64 {
     let mut calories: Vec<u64> = parse(input).collect();
 
-    calories.sort();
+    calories.sort_by(|a, b| b.cmp(a));
 
-    calories.into_iter().rev().take(3).sum()
+    calories.into_iter().take(3).sum()
 }
 
 fn parse(input: &str) -> impl Iterator<Item = u64> + '_ {
