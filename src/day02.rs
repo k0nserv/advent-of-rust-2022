@@ -73,11 +73,8 @@ impl Action {
     }
 
     fn outcome(&self, opponent_action: Self) -> Outcome {
-        if self == &opponent_action {
-            return Outcome::Draw;
-        }
-
         match (self, opponent_action) {
+            (a @ _, b @ _) if a == &b => Outcome::Draw,
             (Self::Rock, Self::Scissors)
             | (Self::Paper, Self::Rock)
             | (Self::Scissors, Self::Paper) => Outcome::Win,
@@ -86,15 +83,11 @@ impl Action {
     }
 
     fn desired_outcome(&self, outcome: Outcome) -> Self {
-        if outcome == Outcome::Draw {
-            return *self;
-        }
-
         match (self, outcome) {
+            (_, Outcome::Draw) => *self,
             (Action::Rock, Outcome::Win) | (Action::Paper, Outcome::Lose) => Action::Scissors,
             (Action::Rock, Outcome::Lose) | (Action::Scissors, Outcome::Win) => Action::Paper,
             (Action::Scissors, Outcome::Lose) | (Action::Paper, Outcome::Win) => Action::Rock,
-            _ => unreachable!(),
         }
     }
 }
