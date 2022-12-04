@@ -1,9 +1,8 @@
-use std::collections::HashMap;
 use std::ops::RangeInclusive;
 
 pub fn star_one(input: &str) -> usize {
     parse(input)
-        .filter(|parsed: &Result<_, String>| {
+        .filter(|parsed| {
             let (lhs, rhs) = parsed.as_ref().expect("To be able to parse all lines");
 
             either_fully_contains(lhs, rhs)
@@ -13,19 +12,12 @@ pub fn star_one(input: &str) -> usize {
 
 pub fn star_two(input: &str) -> usize {
     parse(input)
-        .map(|parsed| {
-            let (lhs, rhs) = parsed.expect("To be able to parse all lines");
-            let counts = lhs.into_iter().chain(rhs.into_iter()).fold(
-                HashMap::<u64, usize>::new(),
-                |mut acc, v| {
-                    *(acc.entry(v).or_default()) += 1_usize;
-                    acc
-                },
-            );
+        .filter(|parsed| {
+            let (lhs, rhs) = parsed.as_ref().expect("To be able to parse all lines");
 
-            usize::from(counts.into_iter().any(|(_, c)| c > 1))
+            lhs.intersects(rhs) || rhs.intersects(lhs)
         })
-        .sum()
+        .count()
 }
 
 fn parse(
@@ -74,6 +66,7 @@ fn parse_range(s: &str) -> Result<RangeInclusive<u64>, String> {
 
 trait RangeInclusiveExt {
     fn fully_contains(&self, other: &Self) -> bool;
+    fn intersects(&self, other: &Self) -> bool;
 }
 impl<Idx> RangeInclusiveExt for RangeInclusive<Idx>
 where
@@ -81,6 +74,11 @@ where
 {
     fn fully_contains(&self, other: &Self) -> bool {
         self.start() <= other.start() && self.end() >= other.end()
+    }
+
+    fn intersects(&self, other: &Self) -> bool {
+        (self.start() <= other.start() && other.start() <= self.end())
+            || (self.start() <= other.end() && other.end() <= self.end())
     }
 }
 

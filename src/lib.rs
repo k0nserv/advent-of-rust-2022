@@ -207,12 +207,17 @@ mod tests {
 
     #[test]
     fn solve_day04() {
+        use super::time;
         use crate::day04::{star_one, star_two};
 
         let input = load_file("day04.txt");
 
-        assert_eq!(star_one(&input), 413);
-        assert_eq!(star_two(&input), 806);
+        time("Day 04 start one", || {
+            assert_eq!(star_one(&input), 413);
+        });
+        time("Day 04 start one", || {
+            assert_eq!(star_two(&input), 806);
+        });
     }
 
     #[test]
