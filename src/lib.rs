@@ -211,8 +211,8 @@ mod tests {
 
         let input = load_file("day04.txt");
 
-        assert_eq!(star_one(&input), 1);
-        assert_eq!(star_two(&input), 1);
+        assert_eq!(star_one(&input), 413);
+        assert_eq!(star_two(&input), 806);
     }
 
     #[test]
