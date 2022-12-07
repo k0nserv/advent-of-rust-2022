@@ -72,7 +72,6 @@ impl FileSystem {
     }
 
     fn calculate_sizes(self: &FileSystem) -> HashMap<Path, u64> {
-        // TODO: Should probably just do this when parsing
         let mut sizes: HashMap<Path, u64> = Default::default();
         self.walk::<_, (), ()>(|e, path, _| {
             if e.is_dir() && !sizes.contains_key(&path) {
@@ -107,28 +106,29 @@ impl FromStr for FileSystem {
         let mut current_idx = root_idx;
 
         while let Some(line) = lines.next() {
-            if let Some(rest) = line.strip_prefix("$") {
-                if rest.trim() == "ls" {
-                    let ls_output = lines.take_while_ref(|l| !l.starts_with("$"));
+            let Some(rest) = line.strip_prefix('$') else {
+                return Err(format!("Unexpected line `{}` was not a command", line));
+            };
+            let rest = rest.trim();
+            let mut parts = rest.split_whitespace();
+            let command = parts.next().map(str::trim);
+            let arg = parts.next().map(str::trim);
+
+            match (command, arg) {
+                (Some("ls"), None) => {
+                    let ls_output = lines.take_while_ref(|l| !l.starts_with('$'));
 
                     let children = parse_ls_output(ls_output, &mut arena, current_idx)?;
 
                     arena[current_idx].set_children(children);
-                    continue;
                 }
-
-                if let Some(rest) = rest.trim().strip_prefix("cd").map(str::trim) {
-                    if rest == "/" {
-                        current_idx = root_idx;
-                        continue;
-                    }
-
-                    if rest == ".." {
-                        current_idx = arena[current_idx].parent();
-                        continue;
-                    }
-
-                    let arg = rest.trim();
+                (Some("cd"), Some("/")) => {
+                    current_idx = root_idx;
+                }
+                (Some("cd"), Some("..")) => {
+                    current_idx = arena[current_idx].parent();
+                }
+                (Some("cd"), Some(arg)) => {
                     let dir_idx = arena[current_idx]
                         .find_child_idx(
                             &arena,
@@ -137,6 +137,7 @@ impl FromStr for FileSystem {
                         .ok_or_else(|| format!("Invalid cd to {}, dir missing", arg))?;
                     current_idx = dir_idx;
                 }
+                _ => return Err(format!(r#"Invalid command "{}""#, line)),
             }
         }
 
@@ -319,7 +320,7 @@ impl fmt::Display for FileSystem {
 
 #[cfg(test)]
 mod tests {
-    use super::{star_one, star_two, FileSystem};
+    use super::{star_one, star_two};
 
     const TEST_INPUT: &'static str = r#"
 $ cd /
