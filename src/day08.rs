@@ -1,5 +1,4 @@
 use std::collections::HashSet;
-use std::ops::{ControlFlow, Range};
 
 pub fn star_one(input: &str) -> usize {
     let grid = parse(input);
@@ -146,14 +145,6 @@ impl Direction {
             Direction::Left { .. } => Box::new((0..(start_dim.unwrap_or(max_dim))).rev()),
             Direction::Right { .. } => Box::new(start_dim.map(|d| d + 1).unwrap_or(0)..max_dim),
         }
-    }
-
-    fn is_horizontal(&self) -> bool {
-        matches!(self, Self::Left { .. } | Self::Right { .. })
-    }
-
-    fn is_vertical(&self) -> bool {
-        matches!(self, Self::Up { .. } | Self::Down { .. })
     }
 }
 
