@@ -1,6 +1,5 @@
 use std::collections::HashSet;
 
-use itertools::FoldWhile::{Continue, Done};
 use itertools::Itertools;
 
 pub fn star_one(input: &str) -> usize {
@@ -30,22 +29,11 @@ pub fn star_two(input: &str) -> usize {
             (0..grid.width()).map(move |x| {
                 let height = grid.grid[y][x];
 
-                let do_score = |dir: Direction, dim: usize| {
-                    grid.scan(dir, Some(dim))
-                        .fold_while(0, |acc, (other, _)| {
-                            if other < height {
-                                Continue(acc + 1)
-                            } else {
-                                Done(acc + 1)
-                            }
-                        })
-                        .into_inner()
-                };
+                let up_score = grid.scenic_score(Direction::Up { x }, y, height);
+                let down_score = grid.scenic_score(Direction::Down { x }, y, height);
 
-                let up_score = do_score(Direction::Up { x }, y);
-                let down_score = do_score(Direction::Down { x }, y);
-                let left_score = do_score(Direction::Left { y }, x);
-                let right_score = do_score(Direction::Right { y }, x);
+                let left_score = grid.scenic_score(Direction::Left { y }, x, height);
+                let right_score = grid.scenic_score(Direction::Right { y }, x, height);
 
                 up_score * down_score * left_score * right_score
             })
@@ -118,6 +106,20 @@ impl Grid {
 
     fn height(&self) -> usize {
         self.grid.len()
+    }
+
+    fn scenic_score(&self, direction: Direction, dim: usize, height: u8) -> usize {
+        use itertools::FoldWhile::{Continue, Done};
+
+        self.scan(direction, Some(dim))
+            .fold_while(0, |acc, (other, _)| {
+                if other < height {
+                    Continue(acc + 1)
+                } else {
+                    Done(acc + 1)
+                }
+            })
+            .into_inner()
     }
 }
 
