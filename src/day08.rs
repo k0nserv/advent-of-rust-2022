@@ -1,5 +1,8 @@
 use std::collections::HashSet;
 
+use itertools::FoldWhile::{Continue, Done};
+use itertools::Itertools;
+
 pub fn star_one(input: &str) -> usize {
     let grid = parse(input);
 
@@ -28,19 +31,15 @@ pub fn star_two(input: &str) -> usize {
                 let height = grid.grid[y][x];
 
                 let do_score = |dir: Direction, dim: usize| {
-                    let mut found_edge = true;
-                    let count = grid
-                        .scan(dir, Some(dim), |other, _| {
-                            found_edge = found_edge && other < height;
-                            other < height
+                    grid.scan(dir, Some(dim))
+                        .fold_while(0, |acc, (other, _)| {
+                            if other < height {
+                                Continue(acc + 1)
+                            } else {
+                                Done(acc + 1)
+                            }
                         })
-                        .count();
-
-                    if count == 0 {
-                        0
-                    } else {
-                        count + usize::from(!found_edge)
-                    }
+                        .into_inner()
                 };
 
                 let up_score = do_score(Direction::Up { x }, y);
@@ -63,9 +62,9 @@ fn parse(input: &str) -> Grid {
         .map(|line| {
             line.chars()
                 .map(|c| {
-                    assert!(c.is_ascii_digit());
-
-                    c.to_digit(10).unwrap() as u8
+                    c.to_digit(10)
+                        .expect("All trees should be represented by numbers between 0 and 9")
+                        as u8
                 })
                 .collect()
         })
@@ -81,15 +80,11 @@ struct Grid {
 
 impl Grid {
     /// Scan the grid.
-    fn scan<'s, 'f: 's, F>(
-        &'s self,
+    fn scan(
+        &self,
         direction: Direction,
         dim_start: Option<usize>,
-        mut predicate: F,
-    ) -> impl Iterator<Item = (u8, (usize, usize))> + 's
-    where
-        F: FnMut(u8, (usize, usize)) -> bool + 'f,
-    {
+    ) -> impl Iterator<Item = (u8, (usize, usize))> + '_ {
         let range: Box<dyn Iterator<Item = (usize, usize)>> = match direction {
             d @ (Direction::Up { x } | Direction::Down { x }) => {
                 Box::new(d.range(self.height(), dim_start).map(move |y| (x, y)))
@@ -99,25 +94,22 @@ impl Grid {
             }
         };
 
-        range
-            .map(move |(x, y)| {
-                let height = self.grid[y][x];
+        range.map(move |(x, y)| {
+            let height = self.grid[y][x];
 
-                (height, (x, y))
-            })
-            .take_while(move |(height, loc)| predicate(*height, *loc))
+            (height, (x, y))
+        })
     }
 
     fn visible_trees(&self, direction: Direction) -> impl Iterator<Item = (usize, usize)> + '_ {
-        let iter = self.scan(direction, None, |_, _| true);
-
         let mut max_height = None;
-        iter.filter_map(move |(height, (x, y))| {
-            let is_visible = max_height.map(|c| height > c).unwrap_or(true);
-            max_height = max_height.map(|c| c.max(height)).or(Some(height));
+        self.scan(direction, None)
+            .filter_map(move |(height, (x, y))| {
+                let is_visible = max_height.map(|c| height > c).unwrap_or(true);
+                max_height = max_height.map(|c| c.max(height)).or(Some(height));
 
-            is_visible.then_some((x, y))
-        })
+                is_visible.then_some((x, y))
+            })
     }
 
     fn width(&self) -> usize {
@@ -175,15 +167,11 @@ mod tests {
     fn test_scan_with_starting_point_up() {
         let grid = parse(INPUT);
 
-        let result: Vec<_> = grid
-            .scan(Direction::Up { x: 2 }, Some(4), |_, _| true)
-            .collect();
+        let result: Vec<_> = grid.scan(Direction::Up { x: 2 }, Some(4)).collect();
         let expected = vec![(5, (2, 3)), (3, (2, 2)), (5, (2, 1)), (3, (2, 0))];
         assert_eq!(result, expected);
 
-        let result: Vec<_> = grid
-            .scan(Direction::Up { x: 2 }, Some(0), |_, _| true)
-            .collect();
+        let result: Vec<_> = grid.scan(Direction::Up { x: 2 }, Some(0)).collect();
         let expected = vec![];
         assert_eq!(result, expected);
     }
@@ -192,15 +180,11 @@ mod tests {
     fn test_scan_with_starting_point_left() {
         let grid = parse(INPUT);
 
-        let result: Vec<_> = grid
-            .scan(Direction::Left { y: 1 }, Some(3), |_, _| true)
-            .collect();
+        let result: Vec<_> = grid.scan(Direction::Left { y: 1 }, Some(3)).collect();
         let expected = vec![(5, (2, 1)), (5, (1, 1)), (2, (0, 1))];
         assert_eq!(result, expected);
 
-        let result: Vec<_> = grid
-            .scan(Direction::Left { y: 1 }, Some(0), |_, _| true)
-            .collect();
+        let result: Vec<_> = grid.scan(Direction::Left { y: 1 }, Some(0)).collect();
         let expected = vec![];
         assert_eq!(result, expected);
     }
@@ -209,16 +193,12 @@ mod tests {
     fn test_scan_with_starting_point_down() {
         let grid = parse(INPUT);
 
-        let result: Vec<_> = grid
-            .scan(Direction::Down { x: 2 }, Some(3), |_, _| true)
-            .collect();
+        let result: Vec<_> = grid.scan(Direction::Down { x: 2 }, Some(3)).collect();
         let expected = vec![(3, (2, 4))];
 
         assert_eq!(result, expected);
 
-        let result: Vec<_> = grid
-            .scan(Direction::Down { x: 2 }, Some(4), |_, _| true)
-            .collect();
+        let result: Vec<_> = grid.scan(Direction::Down { x: 2 }, Some(4)).collect();
         let expected = vec![];
 
         assert_eq!(result, expected);
@@ -228,16 +208,12 @@ mod tests {
     fn test_scan_with_starting_point_right() {
         let grid = parse(INPUT);
 
-        let result: Vec<_> = grid
-            .scan(Direction::Right { y: 1 }, Some(3), |_, _| true)
-            .collect();
+        let result: Vec<_> = grid.scan(Direction::Right { y: 1 }, Some(3)).collect();
         let expected = vec![(2, (4, 1))];
 
         assert_eq!(result, expected);
 
-        let result: Vec<_> = grid
-            .scan(Direction::Right { y: 1 }, Some(4), |_, _| true)
-            .collect();
+        let result: Vec<_> = grid.scan(Direction::Right { y: 1 }, Some(4)).collect();
         let expected = vec![];
 
         assert_eq!(result, expected);
