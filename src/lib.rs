@@ -3,7 +3,7 @@ use std::io::Read;
 use std::str::FromStr;
 use std::time::{SystemTime, UNIX_EPOCH};
 
-#[allow(dead_code, unused_imports)]
+#[allow(dead_code)]
 mod day01;
 mod day02;
 mod day03;
@@ -276,8 +276,19 @@ mod tests {
 
         let input = load_file("day10.txt");
 
-        assert_eq!(star_one(&input), 1);
-        assert_eq!(star_two(&input), 1);
+        assert_eq!(star_one(&input), 11780);
+        assert_eq!(
+            star_two(&input).trim(),
+            "
+###..####.#..#.#....###...##..#..#..##..
+#..#....#.#..#.#....#..#.#..#.#..#.#..#.
+#..#...#..#..#.#....###..#..#.#..#.#..#.
+###...#...#..#.#....#..#.####.#..#.####.
+#....#....#..#.#....#..#.#..#.#..#.#..#.
+#....####..##..####.###..#..#..##..#..#.
+"
+            .trim()
+        );
     }
 
     #[test]
