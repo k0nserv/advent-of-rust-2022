@@ -14,6 +14,7 @@ mod day07;
 mod day08;
 mod day09;
 mod day10;
+#[macro_use]
 mod day11;
 mod day12;
 mod day13;
@@ -293,12 +294,84 @@ mod tests {
 
     #[test]
     fn solve_day11() {
-        use crate::day11::{star_one, star_two};
+        use crate::day11::prelude::*;
 
-        let input = load_file("day11.txt");
+        let monkeys = monkeys!(
+            {
+            Monkey 0:
+              Starting items: 84, 66, 62, 69, 88, 91, 91
+              Operation: new = old * 11
+              Test: divisible by 2
+                If true: throw to monkey 4
+                If false: throw to monkey 7
+            }
 
-        assert_eq!(star_one(&input), 1);
-        assert_eq!(star_two(&input), 1);
+            {
+            Monkey 1:
+              Starting items: 98, 50, 76, 99
+              Operation: new = old * old
+              Test: divisible by 7
+                If true: throw to monkey 3
+                If false: throw to monkey 6
+            }
+
+            {
+            Monkey 2:
+              Starting items: 72, 56, 94
+              Operation: new = old + 1
+              Test: divisible by 13
+                If true: throw to monkey 4
+                If false: throw to monkey 0
+            }
+
+            {
+            Monkey 3:
+              Starting items: 55, 88, 90, 77, 60, 67
+              Operation: new = old + 2
+              Test: divisible by 3
+                If true: throw to monkey 6
+                If false: throw to monkey 5
+            }
+
+            {
+            Monkey 4:
+              Starting items: 69, 72, 63, 60, 72, 52, 63, 78
+              Operation: new = old * 13
+              Test: divisible by 19
+                If true: throw to monkey 1
+                If false: throw to monkey 7
+            }
+
+            {
+            Monkey 5:
+              Starting items: 89, 73
+              Operation: new = old + 5
+              Test: divisible by 17
+                If true: throw to monkey 2
+                If false: throw to monkey 0
+            }
+
+            {
+            Monkey 6:
+              Starting items: 78, 68, 98, 88, 66
+              Operation: new = old + 6
+              Test: divisible by 11
+                If true: throw to monkey 2
+                If false: throw to monkey 5
+            }
+
+            {
+            Monkey 7:
+              Starting items: 70
+              Operation: new = old + 7
+              Test: divisible by 5
+                If true: throw to monkey 1
+                If false: throw to monkey 3
+            }
+        );
+
+        assert_eq!(star_one(monkeys.clone()), 99840);
+        assert_eq!(star_two(monkeys), 20683044837);
     }
 
     #[test]
