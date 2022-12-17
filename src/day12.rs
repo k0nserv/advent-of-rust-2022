@@ -32,11 +32,9 @@ pub fn star_two(input: &str) -> usize {
                 (path[0] == map.end).then_some((loc, path))
             })
         })
-        .inspect(|(loc, path)| println!("Found path with length {} at {loc:?}", path.len()))
         .min_by_key(|(_, path)| path.len())
         .expect("There should be at least one point at the lowest level");
 
-    dbg!(loc);
     path.len() - 1
 }
 
