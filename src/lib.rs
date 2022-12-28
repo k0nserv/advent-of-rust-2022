@@ -1,9 +1,10 @@
+#![allow(dead_code)]
+
 use std::fs::File;
 use std::io::Read;
 use std::str::FromStr;
 use std::time::{SystemTime, UNIX_EPOCH};
 
-#[allow(dead_code)]
 mod day01;
 mod day02;
 mod day03;
@@ -400,8 +401,8 @@ mod tests {
 
         let input = load_file("day14.txt");
 
-        assert_eq!(star_one(&input), 1);
-        assert_eq!(star_two(&input), 1);
+        assert_eq!(star_one(&input), 1003);
+        assert_eq!(star_two(&input), 25771);
     }
 
     #[test]
